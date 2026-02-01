@@ -29,8 +29,10 @@ interface AppContextType {
 const defaultSettings: AppSettings = {
   discord: {
     webhookUrl: '',
+    webhookRestock: '',
+    webhookCheckout: '',
+    webhookDecline: '',
     enabled: true,
-    mentionEveryone: false,
     testMode: false
   },
   checkIntervalDefault: 30,

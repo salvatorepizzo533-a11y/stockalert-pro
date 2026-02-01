@@ -15,6 +15,9 @@ import { useApp } from '../context/AppContext';
 const SettingsView: React.FC = () => {
   const { settings, updateSettings } = useApp();
   const [webhookUrl, setWebhookUrl] = useState(settings.discord.webhookUrl);
+  const [webhookRestock, setWebhookRestock] = useState(settings.discord.webhookRestock || '');
+  const [webhookCheckout, setWebhookCheckout] = useState(settings.discord.webhookCheckout || '');
+  const [webhookDecline, setWebhookDecline] = useState(settings.discord.webhookDecline || '');
   const [testStatus, setTestStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle');
   const [saved, setSaved] = useState(false);
 
@@ -58,7 +61,10 @@ const SettingsView: React.FC = () => {
     updateSettings({
       discord: {
         ...settings.discord,
-        webhookUrl
+        webhookUrl,
+        webhookRestock,
+        webhookCheckout,
+        webhookDecline
       }
     });
     setSaved(true);
@@ -68,12 +74,6 @@ const SettingsView: React.FC = () => {
   const toggleDiscordEnabled = () => {
     updateSettings({
       discord: { ...settings.discord, enabled: !settings.discord.enabled }
-    });
-  };
-
-  const toggleMentionEveryone = () => {
-    updateSettings({
-      discord: { ...settings.discord, mentionEveryone: !settings.discord.mentionEveryone }
     });
   };
 
@@ -183,24 +183,44 @@ const SettingsView: React.FC = () => {
             </button>
           </div>
 
-          <div className="flex items-center justify-between p-4 bg-[#121118] rounded-xl border border-white/5">
-            <div className="flex items-center gap-3">
-              <span className="text-lg">@everyone</span>
-              <div>
-                <p className="text-sm font-medium">Mention Everyone</p>
-                <p className="text-[10px] text-slate-500">Add @everyone mention to alerts</p>
-              </div>
+          <div className="grid grid-cols-1 gap-4 pt-4 border-t border-white/5">
+            <p className="text-sm font-medium text-slate-400">Additional Webhooks (Optional)</p>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">Restock Webhook</label>
+              <input
+                type="url"
+                value={webhookRestock}
+                onChange={(e) => setWebhookRestock(e.target.value)}
+                placeholder="https://discord.com/api/webhooks/..."
+                className="w-full bg-[#121118] border border-white/5 rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-green-500/50 transition-all"
+              />
+              <p className="text-[10px] text-slate-500 mt-1">Notify when products come back in stock</p>
             </div>
-            <button
-              onClick={toggleMentionEveryone}
-              className={`w-12 h-6 rounded-full transition-all ${
-                settings.discord.mentionEveryone ? 'bg-accent-purple' : 'bg-slate-700'
-              }`}
-            >
-              <div className={`w-5 h-5 bg-white rounded-full transition-transform ${
-                settings.discord.mentionEveryone ? 'translate-x-6' : 'translate-x-0.5'
-              }`}></div>
-            </button>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">Checkout Webhook</label>
+              <input
+                type="url"
+                value={webhookCheckout}
+                onChange={(e) => setWebhookCheckout(e.target.value)}
+                placeholder="https://discord.com/api/webhooks/..."
+                className="w-full bg-[#121118] border border-white/5 rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-blue-500/50 transition-all"
+              />
+              <p className="text-[10px] text-slate-500 mt-1">Notify on successful checkouts</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">Decline Webhook</label>
+              <input
+                type="url"
+                value={webhookDecline}
+                onChange={(e) => setWebhookDecline(e.target.value)}
+                placeholder="https://discord.com/api/webhooks/..."
+                className="w-full bg-[#121118] border border-white/5 rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-red-500/50 transition-all"
+              />
+              <p className="text-[10px] text-slate-500 mt-1">Notify on checkout declines</p>
+            </div>
           </div>
         </div>
       </div>

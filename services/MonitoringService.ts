@@ -565,7 +565,6 @@ class MonitoringService {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          content: this.settings.discord.mentionEveryone ? '@everyone' : undefined,
           embeds: [embed]
         })
       });

@@ -4,8 +4,10 @@ import { AppSettings } from './types';
 export const DEFAULT_SETTINGS: AppSettings = {
   discord: {
     webhookUrl: '',
+    webhookRestock: '',
+    webhookCheckout: '',
+    webhookDecline: '',
     enabled: true,
-    mentionEveryone: false,
     testMode: false
   },
   checkIntervalDefault: 30,

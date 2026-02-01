@@ -6,8 +6,8 @@ import {
   Bell,
   Settings,
   LogOut,
-  ChevronRight,
-  Users
+  Users,
+  Info
 } from 'lucide-react';
 import { AppSection } from '../types';
 
@@ -15,6 +15,8 @@ interface SidebarProps {
   activeSection: AppSection;
   setActiveSection: (section: AppSection) => void;
 }
+
+const APP_VERSION = '1.0.2';
 
 const Sidebar: React.FC<SidebarProps> = ({ activeSection, setActiveSection }) => {
   const menuItems = [
@@ -24,6 +26,20 @@ const Sidebar: React.FC<SidebarProps> = ({ activeSection, setActiveSection }) =>
     { id: AppSection.PROFILES, icon: Users, label: 'Profiles' },
     { id: AppSection.SETTINGS, icon: Settings, label: 'Settings' },
   ];
+
+  const handleExit = () => {
+    if (window.confirm('Sei sicuro di voler chiudere StockAlert Pro?')) {
+      window.close();
+      // Fallback per Electron
+      if (window.electronAPI) {
+        window.electronAPI.quit?.();
+      }
+    }
+  };
+
+  const handleAbout = () => {
+    alert(`StockAlert Pro v${APP_VERSION}\n\nStock Monitor Dashboard\nMonitor product availability and get instant Discord notifications.`);
+  };
 
   return (
     <div className="w-64 bg-[#0B0A0F] border-r border-white/5 flex flex-col h-full shrink-0">
@@ -57,19 +73,25 @@ const Sidebar: React.FC<SidebarProps> = ({ activeSection, setActiveSection }) =>
       </nav>
 
       <div className="p-4 mt-auto border-t border-white/5">
-        <div className="bg-[#121118] p-4 rounded-2xl border border-white/5 group hover:border-purple-500/30 transition-all cursor-pointer">
+        <button
+          onClick={handleAbout}
+          className="w-full bg-[#121118] p-4 rounded-2xl border border-white/5 group hover:border-purple-500/30 transition-all cursor-pointer"
+        >
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center overflow-hidden border border-white/10">
-              <img src="https://picsum.photos/seed/user/100/100" alt="avatar" />
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center">
+              <Radio size={20} className="text-white" />
             </div>
-            <div className="flex-1 overflow-hidden">
-              <p className="text-xs font-bold text-white truncate">Stock Monitor</p>
-              <p className="text-[10px] text-slate-500 truncate">Personal Use</p>
+            <div className="flex-1 overflow-hidden text-left">
+              <p className="text-xs font-bold text-white truncate">StockAlert Pro</p>
+              <p className="text-[10px] text-slate-500 truncate">v{APP_VERSION}</p>
             </div>
-            <ChevronRight size={14} className="text-slate-600" />
+            <Info size={14} className="text-slate-600" />
           </div>
-        </div>
-        <button className="w-full mt-4 flex items-center gap-3 px-4 py-2 text-slate-500 hover:text-red-400 transition-colors">
+        </button>
+        <button
+          onClick={handleExit}
+          className="w-full mt-4 flex items-center gap-3 px-4 py-2 text-slate-500 hover:text-red-400 transition-colors"
+        >
           <LogOut size={16} />
           <span className="text-sm font-medium">Exit</span>
         </button>

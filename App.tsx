@@ -38,7 +38,7 @@ const AppContent: React.FC = () => {
         <div className="absolute top-[-10%] left-[20%] w-[40%] h-[30%] bg-purple-900/10 blur-[150px] rounded-full -z-10"></div>
         <div className="absolute bottom-[10%] right-[5%] w-[30%] h-[30%] bg-indigo-900/10 blur-[150px] rounded-full -z-10"></div>
 
-        <TopBar />
+        <TopBar setActiveSection={setActiveSection} />
 
         <div className="flex-1 overflow-y-auto px-8 py-8 custom-scrollbar">
           <div className="max-w-[1440px] mx-auto">

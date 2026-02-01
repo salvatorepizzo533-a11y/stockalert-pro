@@ -41,8 +41,10 @@ export interface Monitor {
 
 export interface DiscordSettings {
   webhookUrl: string;
+  webhookRestock: string;
+  webhookCheckout: string;
+  webhookDecline: string;
   enabled: boolean;
-  mentionEveryone: boolean;
   testMode: boolean;
 }
 
