@@ -495,9 +495,9 @@ class MonitoringService {
 
         this.lastAlertedUrls.add(alertKey);
 
-        // Send Discord notification
-        if (this.settings?.discord.webhookUrl && this.settings.discord.enabled) {
-          await this.sendDiscordNotification(result, url, monitor);
+        // Send Discord notification (use restock webhook)
+        if (this.settings?.discord.webhookRestock && this.settings.discord.enabled) {
+          await this.sendDiscordNotification(result, url, monitor, 'restock');
         }
 
         // Trigger alert callback
@@ -524,17 +524,49 @@ class MonitoringService {
     }
   }
 
-  private async sendDiscordNotification(result: StockCheckResult, url: string, monitor: Monitor) {
-    if (!this.settings?.discord.webhookUrl) return;
+  private async sendDiscordNotification(
+    result: StockCheckResult,
+    url: string,
+    monitor: Monitor,
+    type: 'restock' | 'checkout' | 'decline' = 'restock'
+  ) {
+    // Get the correct webhook URL based on type
+    let webhookUrl: string | undefined;
+    let title: string;
+    let color: number;
+
+    switch (type) {
+      case 'checkout':
+        webhookUrl = this.settings?.discord.webhookCheckout;
+        title = '✅ CHECKOUT SUCCESS!';
+        color = 0x00FF00; // Green
+        break;
+      case 'decline':
+        webhookUrl = this.settings?.discord.webhookDecline;
+        title = '❌ PAYMENT DECLINED';
+        color = 0xFF0000; // Red
+        break;
+      case 'restock':
+      default:
+        webhookUrl = this.settings?.discord.webhookRestock;
+        title = '🚨 PRODUCT IN STOCK!';
+        color = 0x9D80FE; // Purple (accent color)
+        break;
+    }
+
+    if (!webhookUrl) return;
+
+    // Parse price to get numeric value for embed
+    const priceDisplay = result.price || 'N/A';
 
     const embed = {
-      title: '🚨 PRODUCT IN STOCK!',
+      title,
       description: `**${result.productName}**`,
-      color: 0x00FF00,
+      color,
       fields: [
         {
           name: '💰 Price',
-          value: result.price || 'N/A',
+          value: priceDisplay,
           inline: true
         },
         {
@@ -556,22 +588,45 @@ class MonitoringService {
       thumbnail: result.productImage ? { url: result.productImage } : undefined,
       timestamp: new Date().toISOString(),
       footer: {
-        text: 'Stock Monitor Pro'
+        text: 'StockAlert Pro v1.1.0'
       }
     };
 
     try {
-      await fetch(this.settings.discord.webhookUrl, {
+      await fetch(webhookUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           embeds: [embed]
         })
       });
-      console.log('[Discord] ✅ Notification sent!');
+      console.log(`[Discord] ✅ ${type} notification sent!`);
     } catch (error) {
-      console.error('[Discord] ❌ Failed to send notification:', error);
+      console.error(`[Discord] ❌ Failed to send ${type} notification:`, error);
     }
+  }
+
+  // Public method to send checkout/decline notifications from TaskService
+  async sendCheckoutNotification(
+    productName: string,
+    productUrl: string,
+    productImage: string,
+    price: string,
+    type: 'checkout' | 'decline',
+    taskName?: string
+  ) {
+    const result: StockCheckResult = {
+      inStock: true,
+      productName,
+      price,
+      productImage
+    };
+
+    const mockMonitor = {
+      name: taskName || 'Task'
+    } as Monitor;
+
+    await this.sendDiscordNotification(result, productUrl, mockMonitor, type);
   }
 
   private playNotificationSound() {

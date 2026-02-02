@@ -2,7 +2,7 @@
   "name": "stock-monitor-pro",
   "productName": "StockAlert Pro",
   "private": true,
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "Stock Monitor Dashboard - Track product availability and receive Discord notifications",
   "author": "StockAlert",
   "main": "electron/main.js",

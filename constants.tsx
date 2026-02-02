@@ -10,6 +10,12 @@ export const DEFAULT_SETTINGS: AppSettings = {
     enabled: true,
     testMode: false
   },
+  captcha: {
+    capsolverEnabled: false,
+    capsolverApiKey: '',
+    autoSolveHCaptcha: true,
+    autoSolveReCaptcha: true
+  },
   checkIntervalDefault: 30,
   soundEnabled: true
 };

@@ -4,8 +4,11 @@ import { AppProvider } from './context/AppContext';
 import Sidebar from './components/Sidebar';
 import TopBar from './components/TopBar';
 import HomeView from './views/HomeView';
-import MonitorsView from './views/MonitorsView';
-import AlertsView from './views/AlertsView';
+import AutomationsView from './views/AutomationsView';
+import TasksView from './views/TasksView';
+import ProxiesView from './views/ProxiesView';
+import AccountsView from './views/AccountsView';
+import CaptchasView from './views/CaptchasView';
 import ProfilesView from './views/ProfilesView';
 import SettingsView from './views/SettingsView';
 import { AppSection } from './types';
@@ -17,10 +20,16 @@ const AppContent: React.FC = () => {
     switch (activeSection) {
       case AppSection.HOME:
         return <HomeView />;
-      case AppSection.MONITORS:
-        return <MonitorsView />;
-      case AppSection.ALERTS:
-        return <AlertsView />;
+      case AppSection.AUTOMATIONS:
+        return <AutomationsView />;
+      case AppSection.TASKS:
+        return <TasksView />;
+      case AppSection.PROXIES:
+        return <ProxiesView />;
+      case AppSection.ACCOUNTS:
+        return <AccountsView />;
+      case AppSection.CAPTCHAS:
+        return <CaptchasView />;
       case AppSection.PROFILES:
         return <ProfilesView />;
       case AppSection.SETTINGS:

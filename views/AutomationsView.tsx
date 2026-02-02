@@ -17,7 +17,7 @@ import { useApp } from '../context/AppContext';
 import { MonitorStatus } from '../types';
 import MonitorModal from '../components/MonitorModal';
 
-const MonitorsView: React.FC = () => {
+const AutomationsView: React.FC = () => {
   const { monitors, addMonitor, updateMonitor, deleteMonitor, startMonitor, stopMonitor, startAllMonitors, stopAllMonitors } = useApp();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingMonitor, setEditingMonitor] = useState<typeof monitors[0] | null>(null);
@@ -55,8 +55,8 @@ const MonitorsView: React.FC = () => {
     <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-500">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Stock Monitors</h1>
-          <p className="text-sm text-slate-500">Create and manage your product availability monitors.</p>
+          <h1 className="text-3xl font-bold tracking-tight">Automations</h1>
+          <p className="text-sm text-slate-500">Create and manage your product automation monitors.</p>
         </div>
         <div className="flex gap-3">
           {monitors.length > 0 && (
@@ -82,7 +82,7 @@ const MonitorsView: React.FC = () => {
             className="bg-accent-purple text-white px-6 py-2.5 rounded-xl text-xs font-bold glow-purple flex items-center gap-2"
           >
             <Plus size={16} />
-            New Monitor
+            New Automation
           </button>
         </div>
       </div>
@@ -239,13 +239,13 @@ const MonitorsView: React.FC = () => {
             <div className="w-20 h-20 bg-accent-purple/5 rounded-full flex items-center justify-center mb-6">
               <Radio size={40} className="accent-purple opacity-20" />
             </div>
-            <h2 className="text-2xl font-bold mb-2">No monitors yet</h2>
-            <p className="text-slate-500 max-w-sm mb-8">Create your first monitor to start tracking product availability and receive Discord notifications.</p>
+            <h2 className="text-2xl font-bold mb-2">No automations yet</h2>
+            <p className="text-slate-500 max-w-sm mb-8">Create your first automation to start tracking product availability and receive Discord notifications.</p>
             <button
               onClick={handleCreate}
               className="bg-accent-purple text-white px-8 py-3 rounded-xl font-bold glow-purple"
             >
-              Create First Monitor
+              Create First Automation
             </button>
           </div>
         )}
@@ -261,4 +261,4 @@ const MonitorsView: React.FC = () => {
   );
 };
 
-export default MonitorsView;
+export default AutomationsView;

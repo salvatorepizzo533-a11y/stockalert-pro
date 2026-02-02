@@ -1,183 +1,204 @@
-
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import {
-  Bell,
-  Radio,
-  ArrowUpRight,
   ExternalLink,
-  AlertCircle
+  AlertCircle,
+  ShoppingCart,
+  DollarSign,
+  TrendingUp,
+  CheckCircle,
+  XCircle,
+  Clock
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import { MonitorStatus } from '../types';
+import { Order } from '../types';
+
+type TimeFilter = '1D' | '7D' | '30D' | 'ALL';
+
+const CHANGELOG = [
+  { version: '1.1.0', date: '2026-02-01', changes: ['Tasks with Safe/SafePreload/Fast modes', 'Min/Max price filter', 'Proxy rotation', 'New stores: Supreme, Stanley1913, Afew, etc.', 'Removed Alerts section', 'Renamed Monitors to Automations', 'Added clock'] },
+  { version: '1.0.2', date: '2026-01-30', changes: ['Multiple webhooks support', 'UI fixes', 'Update script'] },
+  { version: '1.0.1', date: '2026-01-28', changes: ['Profiles with billing address', 'Credit card support'] },
+  { version: '1.0.0', date: '2026-01-25', changes: ['Initial release', 'Monitors and alerts', 'Discord notifications'] },
+];
 
 const HomeView: React.FC = () => {
-  const { monitors, alerts, settings } = useApp();
+  const { settings, orders } = useApp();
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>('1D');
 
-  const activeMonitors = monitors.filter(m => m.status === MonitorStatus.RUNNING).length;
-  const totalAlerts = monitors.reduce((sum, m) => sum + m.stats.alertsSent, 0);
-  const recentAlerts = alerts.slice(0, 5);
+  // Filter orders by time
+  const filteredOrders = useMemo(() => {
+    const now = new Date();
+    const filterMs = {
+      '1D': 24 * 60 * 60 * 1000,
+      '7D': 7 * 24 * 60 * 60 * 1000,
+      '30D': 30 * 24 * 60 * 60 * 1000,
+      'ALL': Infinity
+    };
+
+    return orders.filter(order => {
+      const orderDate = new Date(order.timestamp);
+      return (now.getTime() - orderDate.getTime()) <= filterMs[timeFilter];
+    });
+  }, [orders, timeFilter]);
+
+  // Calculate stats
+  const totalCheckouts = filteredOrders.filter(o => o.status === 'success').length;
+  const totalSpent = filteredOrders
+    .filter(o => o.status === 'success')
+    .reduce((sum, o) => sum + o.price, 0);
+  const successRate = filteredOrders.length > 0
+    ? Math.round((totalCheckouts / filteredOrders.length) * 100)
+    : 0;
+
+  const getStatusIcon = (status: Order['status']) => {
+    switch (status) {
+      case 'success':
+        return <CheckCircle size={14} className="text-green-400" />;
+      case 'declined':
+        return <XCircle size={14} className="text-red-400" />;
+      default:
+        return <Clock size={14} className="text-yellow-400" />;
+    }
+  };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      {/* Header Info */}
-      <div className="flex items-end justify-between">
+    <div className="space-y-6 animate-in fade-in duration-500">
+      {/* Header */}
+      <div className="flex items-center justify-between">
         <div>
-          <div className="flex items-center gap-2 mb-2">
-            <span className="px-3 py-1 bg-accent-purple/10 text-accent-purple text-[10px] font-bold rounded-full uppercase tracking-widest">Stock Monitor Dashboard</span>
-            <span className="text-slate-500 text-[10px]">• {activeMonitors} Active Monitor{activeMonitors !== 1 ? 's' : ''}</span>
-          </div>
-          <h1 className="text-3xl font-bold tracking-tight">Product Availability Tracker</h1>
+          <span className="px-3 py-1 bg-accent-purple/10 text-accent-purple text-[10px] font-bold rounded-full uppercase tracking-widest">Dashboard</span>
+          <h1 className="text-2xl font-bold tracking-tight mt-2">StockAlert Pro</h1>
+        </div>
+        <div className="flex gap-2">
+          {(['1D', '7D', '30D', 'ALL'] as TimeFilter[]).map((filter) => (
+            <button
+              key={filter}
+              onClick={() => setTimeFilter(filter)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                timeFilter === filter
+                  ? 'bg-accent-purple text-white'
+                  : 'bg-[#121118] text-slate-400 hover:text-white'
+              }`}
+            >
+              {filter}
+            </button>
+          ))}
         </div>
       </div>
 
       {/* Discord Warning */}
-      {!settings.discord.webhookUrl && (
-        <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-2xl p-4 flex items-center gap-4">
-          <AlertCircle className="text-yellow-400" size={24} />
+      {!settings.discord.webhookRestock && !settings.discord.webhookCheckout && (
+        <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-3 flex items-center gap-3">
+          <AlertCircle className="text-yellow-400" size={20} />
           <div>
-            <p className="text-sm font-bold text-yellow-400">Discord not configured</p>
-            <p className="text-xs text-slate-400">Go to Settings to add your Discord webhook URL and receive notifications.</p>
+            <p className="text-sm font-bold text-yellow-400">Discord webhooks not configured</p>
+            <p className="text-xs text-slate-400">Go to Settings to add your webhooks.</p>
           </div>
         </div>
       )}
 
-      {/* Main Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="glass-card p-6 rounded-3xl relative overflow-hidden group hover:border-purple-500/20 transition-all">
-          <div className="flex justify-between items-start mb-4">
-            <div className="p-2.5 bg-accent-purple/10 rounded-xl">
-              <Bell size={20} className="accent-purple" />
+      {/* Stats - Only 3 cards */}
+      <div className="grid grid-cols-3 gap-4">
+        <div className="glass-card p-5 rounded-2xl">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="p-2 bg-green-500/10 rounded-xl">
+              <ShoppingCart size={18} className="text-green-400" />
             </div>
           </div>
-          <p className="text-slate-400 text-xs font-medium mb-1">Total Alerts Sent</p>
-          <div className="flex items-end gap-2">
-            <h3 className="text-3xl font-bold">{totalAlerts}</h3>
-            <span className="text-slate-500 text-sm pb-1 mb-0.5">all time</span>
-          </div>
+          <p className="text-slate-400 text-xs font-medium mb-1">Total Checkouts</p>
+          <h3 className="text-2xl font-bold text-green-400">{totalCheckouts}</h3>
         </div>
 
-        <div className="glass-card p-6 rounded-3xl relative overflow-hidden group hover:border-purple-500/20 transition-all">
-          <div className="flex justify-between items-start mb-4">
-            <div className="p-2.5 bg-accent-purple/10 rounded-xl">
-              <Radio size={20} className="accent-purple" />
+        <div className="glass-card p-5 rounded-2xl">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="p-2 bg-blue-500/10 rounded-xl">
+              <DollarSign size={18} className="text-blue-400" />
             </div>
-            {activeMonitors > 0 && (
-              <div className="flex items-center gap-1 text-green-400 text-xs font-bold">
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                <span>Active</span>
-              </div>
-            )}
           </div>
-          <p className="text-slate-400 text-xs font-medium mb-1">Monitors</p>
-          <div className="flex items-end gap-2">
-            <h3 className="text-3xl font-bold">{activeMonitors}</h3>
-            <span className="text-slate-500 text-sm pb-1 mb-0.5">of {monitors.length} running</span>
-          </div>
+          <p className="text-slate-400 text-xs font-medium mb-1">Total Spent</p>
+          <h3 className="text-2xl font-bold text-blue-400">${totalSpent.toFixed(2)}</h3>
         </div>
 
-        <div className="bg-gradient-to-br from-indigo-900/40 to-[#9D80FE]/20 border border-[#9D80FE]/30 p-6 rounded-3xl flex flex-col justify-between relative overflow-hidden">
-          <div className="absolute -top-10 -right-10 w-40 h-40 bg-accent-purple/20 blur-3xl rounded-full"></div>
-          <div>
-            <div className="flex justify-between items-center mb-6">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-white/60">How It Works</span>
-            </div>
-            <h4 className="text-xl font-bold mb-2">Stock Monitor Pro</h4>
-            <p className="text-xs text-white/60 leading-relaxed max-w-[80%]">Monitor product availability and get instant Discord notifications when items are back in stock.</p>
-          </div>
-          <div className="space-y-2 mt-4">
-            <div className="flex items-center gap-2 text-xs text-white/80">
-              <div className={`w-1.5 h-1.5 rounded-full ${settings.discord.webhookUrl ? 'bg-green-400' : 'bg-slate-500'}`}></div>
-              <span>Discord {settings.discord.webhookUrl ? 'connected' : 'not configured'}</span>
-            </div>
-            <div className="flex items-center gap-2 text-xs text-white/80">
-              <div className={`w-1.5 h-1.5 rounded-full ${monitors.length > 0 ? 'bg-green-400' : 'bg-slate-500'}`}></div>
-              <span>{monitors.length} monitor{monitors.length !== 1 ? 's' : ''} configured</span>
-            </div>
-            <div className="flex items-center gap-2 text-xs text-white/80">
-              <div className={`w-1.5 h-1.5 rounded-full ${activeMonitors > 0 ? 'bg-green-400 animate-pulse' : 'bg-slate-500'}`}></div>
-              <span>{activeMonitors > 0 ? 'Monitoring active' : 'No active monitoring'}</span>
+        <div className="glass-card p-5 rounded-2xl">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="p-2 bg-purple-500/10 rounded-xl">
+              <TrendingUp size={18} className="text-purple-400" />
             </div>
           </div>
+          <p className="text-slate-400 text-xs font-medium mb-1">Success Rate</p>
+          <h3 className="text-2xl font-bold text-purple-400">{successRate}%</h3>
         </div>
       </div>
 
-      {/* Recent Alerts */}
-      <div className="glass-card rounded-3xl p-8">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h2 className="text-xl font-bold mb-1">Recent Alerts</h2>
-            <p className="text-xs text-slate-500">Latest stock availability notifications</p>
+      {/* Orders & Changelog */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Recent Orders */}
+        <div className="lg:col-span-2 glass-card rounded-2xl p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-base font-bold">Recent Orders</h2>
+            <span className="text-xs text-slate-500">{filteredOrders.length} orders</span>
           </div>
+
+          {filteredOrders.length > 0 ? (
+            <div className="space-y-2 max-h-[300px] overflow-y-auto">
+              {filteredOrders.slice(0, 10).map((order) => (
+                <div
+                  key={order.id}
+                  className="flex items-center gap-3 p-2 bg-[#0a090e] rounded-xl hover:bg-white/5 transition-colors"
+                >
+                  {order.productImage ? (
+                    <img src={order.productImage} className="w-10 h-10 rounded-lg object-cover bg-slate-800" alt="" />
+                  ) : (
+                    <div className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center">
+                      <ShoppingCart size={16} className="text-slate-600" />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{order.productName}</p>
+                    <p className="text-xs text-slate-500">{order.storeName} • Size {order.size}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-bold">${order.price.toFixed(2)}</p>
+                    <div className="flex items-center gap-1 justify-end">
+                      {getStatusIcon(order.status)}
+                      <span className={`text-xs capitalize ${
+                        order.status === 'success' ? 'text-green-400' :
+                        order.status === 'declined' ? 'text-red-400' : 'text-yellow-400'
+                      }`}>
+                        {order.status}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <ShoppingCart size={32} className="mx-auto mb-3 text-slate-600" />
+              <p className="text-slate-500 text-sm">No orders yet</p>
+            </div>
+          )}
         </div>
 
-        {recentAlerts.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
-              <thead className="text-[10px] font-bold uppercase tracking-widest text-slate-500 border-b border-white/5">
-                <tr>
-                  <th className="pb-4 px-2">Product Info</th>
-                  <th className="pb-4 px-2">Store</th>
-                  <th className="pb-4 px-2">Price</th>
-                  <th className="pb-4 px-2">Detected</th>
-                  <th className="pb-4 px-2">Status</th>
-                  <th className="pb-4 px-2 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5">
-                {recentAlerts.map((alert) => (
-                  <tr key={alert.id} className="group hover:bg-white/[0.02] transition-colors">
-                    <td className="py-4 px-2">
-                      <div className="flex items-center gap-4">
-                        {alert.productImage ? (
-                          <img src={alert.productImage} className="w-10 h-10 rounded-xl object-cover bg-slate-800" alt="" />
-                        ) : (
-                          <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center">
-                            <Bell size={16} className="text-slate-600" />
-                          </div>
-                        )}
-                        <div>
-                          <p className="text-sm font-bold text-white group-hover:accent-purple transition-colors truncate max-w-[200px]">{alert.productName}</p>
-                          <a href={alert.productUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] text-slate-500 flex items-center gap-1 hover:text-white">
-                            View Product <ExternalLink size={8} />
-                          </a>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="py-4 px-2">
-                      <span className="text-xs font-medium text-slate-300">{alert.storeName}</span>
-                    </td>
-                    <td className="py-4 px-2">
-                      <span className="text-xs font-bold text-white">{alert.price}</span>
-                    </td>
-                    <td className="py-4 px-2">
-                      <span className="text-xs text-slate-400">{alert.timestamp}</span>
-                    </td>
-                    <td className="py-4 px-2">
-                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
-                        alert.status === 'In Stock' ? 'bg-green-500/10 text-green-400' :
-                        alert.status === 'Notified' ? 'bg-blue-500/10 text-blue-400' :
-                        'bg-red-500/10 text-red-400'
-                      }`}>
-                        {alert.status}
-                      </span>
-                    </td>
-                    <td className="py-4 px-2 text-right">
-                      <a href={alert.productUrl} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg hover:bg-accent-purple/10 hover:text-accent-purple transition-colors inline-block">
-                        <ArrowUpRight size={16} />
-                      </a>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        {/* Changelog */}
+        <div className="glass-card rounded-2xl p-5">
+          <h2 className="text-base font-bold mb-4">Changelog</h2>
+          <div className="space-y-3 max-h-[300px] overflow-y-auto">
+            {CHANGELOG.map((release) => (
+              <div key={release.version} className="border-l-2 border-accent-purple/30 pl-3">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-xs font-bold">v{release.version}</span>
+                  <span className="text-[10px] text-slate-500">{release.date}</span>
+                </div>
+                <ul className="space-y-0.5">
+                  {release.changes.map((change, i) => (
+                    <li key={i} className="text-[10px] text-slate-400">• {change}</li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </div>
-        ) : (
-          <div className="text-center py-12">
-            <Bell size={40} className="mx-auto mb-4 text-slate-600" />
-            <p className="text-slate-500">No alerts yet</p>
-            <p className="text-xs text-slate-600 mt-1">Alerts will appear here when products are found</p>
-          </div>
-        )}
+        </div>
       </div>
     </div>
   );

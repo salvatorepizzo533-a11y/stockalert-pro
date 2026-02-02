@@ -7,7 +7,11 @@ import {
   Settings,
   LogOut,
   Users,
-  Info
+  Info,
+  Zap,
+  Globe,
+  UserCircle,
+  ShieldCheck
 } from 'lucide-react';
 import { AppSection } from '../types';
 
@@ -16,13 +20,16 @@ interface SidebarProps {
   setActiveSection: (section: AppSection) => void;
 }
 
-const APP_VERSION = '1.0.2';
+const APP_VERSION = '1.1.0';
 
 const Sidebar: React.FC<SidebarProps> = ({ activeSection, setActiveSection }) => {
   const menuItems = [
     { id: AppSection.HOME, icon: LayoutDashboard, label: 'Dashboard' },
-    { id: AppSection.MONITORS, icon: Radio, label: 'Monitors' },
-    { id: AppSection.ALERTS, icon: Bell, label: 'Alerts' },
+    { id: AppSection.AUTOMATIONS, icon: Radio, label: 'Automations' },
+    { id: AppSection.TASKS, icon: Zap, label: 'Tasks' },
+    { id: AppSection.PROXIES, icon: Globe, label: 'Proxies' },
+    { id: AppSection.ACCOUNTS, icon: UserCircle, label: 'Accounts' },
+    { id: AppSection.CAPTCHAS, icon: ShieldCheck, label: 'Captchas' },
     { id: AppSection.PROFILES, icon: Users, label: 'Profiles' },
     { id: AppSection.SETTINGS, icon: Settings, label: 'Settings' },
   ];
